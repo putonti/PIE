@@ -28,21 +28,31 @@ bbmap_file_phage='C1355Pcont1354covstats.txt'
 
 
 # OUTPUT FOLDER
-
 output_file='/Users/taylormiller-ensminger/Desktop/1354Cont_output.csv'
 
 
-def process_raw_reads(*fastqs,platform='Illumina'):
-    # expects 1 or 2 fastq files
-    # default Illumina
-    
-    # trim reads
-    ## NEED CODE TO RUN BBDUK
-    
-    # assemble reads
-    ## NEED CODE TO RUN METASPADES
-    
-    ## NEED TO FIGURE OUT WHERE IT'S GOING TO BE SAVED
+# THIS IS MY PATH FOR MY TOOLS -- feel free to remove this here and from the below function
+path_of_tools = "/Users/genevieve/Downloads/tools_and_programs/"
+
+# I didn't include paths for the input/output, can easily add those in as an argument
+def process_raw_reads(*fastqs, platform='Illumina'):
+    if len(fastqs) == 1:
+        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in="+fastqs[0]+" out=trimmed_"+fastqs[0]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
+        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -12 trimmed_"+fastqs[0]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        os.system(bbduk_trim)
+        os.system(spades_assembly)
+    elif len(fastqs) == 2:
+        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in1="+fastqs[0]+" in2="+fastqs[1]+" out1=trimmed_"+fastqs[0]+" out2=trimmed_"+fastqs[1]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_"+fastqs[1]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
+        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -1 trimmed_"+fastqs[0]+" -2 trimmed_"+fastqs[1]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        os.system(bbduk_trim)
+        os.system(spades_assembly)
+    else:
+        print("Expected 1 or 2 fastq files. Please check fastq files and try again.")
+
+# expects 1 or 2 fastq files
+# default Illumina
+## NEED TO FIGURE OUT WHERE IT'S GOING TO BE SAVED
+
 
 
 def categorize_assembled_contigs()
