@@ -1,6 +1,7 @@
 import os
 import csv
 from Bio import SeqIO
+import copy
 
 # INPUTS
 
