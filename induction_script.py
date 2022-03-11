@@ -4,32 +4,46 @@ from Bio import SeqIO
 import copy
 
 # INPUT FILES
-phages='/Users/putonti/Research/Projects/Induced_Finder/all_phages.fasta'
-fastqs=['/Users/putonti/Research/Projects/Induced_Finder/trimmed_13031ml_R1.fastq','/Users/putonti/Research/Projects/Induced_Finder/trimmed_13031ml_R2.fastq']
+phages = '/Users/genevieve/Downloads/PUTONTI_LAB/taylor_code/all_phages.fasta'
+fastqs = ['/Users/genevieve/Downloads/PUTONTI_LAB/taylor_code/trimmed_13031ml_R1.fastq',
+          '/Users/genevieve/Downloads/PUTONTI_LAB/taylor_code/trimmed_13031ml_R2.fastq']
 
+# Output path + name of current sample
+outpath_and_sample_name = "/Users/genevieve/Downloads/PUTONTI_LAB/taylor_code/13031ml"
 
-# THIS IS MY PATH FOR MY TOOLS -- feel free to remove this here and from the below function
+# GJ's path
 path_of_tools = "/Users/genevieve/Downloads/tools_and_programs/"
 # path_of_tools='/Users/putonti/Software/' -CP's path
 
-# I didn't include paths for the input/output, can easily add those in as an argument
-## GJ -- assume that the fastqs are passed in with the paths (that's what I've done elsewhere)
-## GJ -- add threads to speed up SPAdes
-def process_raw_reads(*fastqs, platform='Illumina'):
+
+def process_raw_reads(*fastqs, num_threads=8, platform='Illumina'):
     if len(fastqs) == 1:
-        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in="+fastqs[0]+" out=trimmed_"+fastqs[0]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
-        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -12 trimmed_"+fastqs[0]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in="+fastqs[0]+" out="+\
+                     fastqs[0].strip(".fastq")+"_trimmed.fastq"+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="\
+                     +fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+\
+                     "_read_qualTrimming.stats statscolumns=5 trimq=20"
+        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -t "+str(num_threads)+\
+            " -12 "+fastqs[0].strip(".fastq")+"_trimmed.fastq"+" -o "+\
+            fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
         os.system(bbduk_trim)
         os.system(spades_assembly)
-        return fastqs[0].strip(".fastq.gz")+"_assembly"
+        return fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
     elif len(fastqs) == 2:
-        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in1="+fastqs[0]+" in2="+fastqs[1]+" out1=trimmed_"+fastqs[0]+" out2=trimmed_"+fastqs[1]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_"+fastqs[1]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
-        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -1 trimmed_"+fastqs[0]+" -2 trimmed_"+fastqs[1]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in1="+fastqs[0]+" in2="+fastqs[1]+\
+                     " out1="+fastqs[0].strip(".fastq")+"_trimmed.fastq"+" out2="+\
+                     fastqs[1].strip(".fastq")+"_trimmed.fastq qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 " \
+                     "stats="+fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+\
+                     "_read_qualTrimming.stats statscolumns=5 trimq=20"
+        spades_assembly = path_of_tools + "SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -t "+\
+            str(num_threads)+" -1 "+fastqs[0].strip(".fastq")+"_trimmed.fastq"+" -2 "+\
+            fastqs[1].strip(".fastq")+"_trimmed.fastq"+" -o "+\
+            fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
         os.system(bbduk_trim)
         os.system(spades_assembly)
-        return fastqs[0].strip(".fastq.gz")+"_assembly"
+        return fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
     else:
         print("Expected 1 or 2 fastq files. Please check fastq files and try again.")
+
 
 def trim_assembly(contigs):
     # remove contigs that are less than 1000 bp
@@ -45,11 +59,11 @@ def trim_assembly(contigs):
 def categorize_assembled_contigs(contigs,phage_sequences):
     # create blast database of the predicted phage sequences
     phage_name=phage_sequences[:phage_sequences.rfind('.')]
-    command=path_of_tools+'ncbi-blast-2.9.0+/bin/makeblastdb -in '+phage_sequences+' -out '+phage_name+' -title '+phage_name+' -dbtype nucl'
+    command=path_of_tools+'ncbi-blast-2.12.0+/bin/makeblastdb -in '+phage_sequences+' -out '+phage_name+' -title '+phage_name+' -dbtype nucl'
     os.system(command)  # uncomment to run
     
     # blast assembly against phage database to figure out which ones are phage
-    command=path_of_tools+'ncbi-blast-2.9.0+/bin/blastn -query '+contigs+' -db '+ phage_name+' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs pident length evalue bitscore" -out '+phage_name+'_blastn.csv'
+    command=path_of_tools+'ncbi-blast-2.12.0+/bin/blastn -query '+contigs+' -db '+ phage_name+' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs pident length evalue bitscore" -out '+phage_name+'_blastn.csv'
     os.system(command)
     
     # read in blast results
@@ -121,9 +135,11 @@ def compute_coverage(bacterial_contigs,phage_sequences,*fastqs):
         b_coverages[x[0]].append(int(x[2]))
 
     # calculate average coverages for bacteria    
-    avg_b_coverages=dict()
+    avg_b_names = []
+    avg_b_coverages = []
     for i in b_coverages:
-        avg_b_coverages[i]=sum(b_coverages[i])/len(b_coverages[i])
+        avg_b_names.append(i)
+        avg_b_coverages.append(sum(b_coverages[i]) / len(b_coverages[i]))
     
     # compute coverage for phage contigs
     # IMPORTANT NOTE, PHAGE NAMES MUST BE UNIQUE OTHERWISE BBMAP EXPLODES
@@ -152,15 +168,28 @@ def compute_coverage(bacterial_contigs,phage_sequences,*fastqs):
     p_coverages.clear()
     
     # calculate average coverages for phages
-    avg_p_coverages=dict()
+    avg_p_names = []
+    avg_p_coverages = []
     for i in revised_phage_list:
-        avg_p_coverages[i]=sum(revised_phage_list[i])/len(revised_phage_list[i])
+        avg_p_names.append(i)
+        avg_p_coverages.append(sum(revised_phage_list[i]) / len(revised_phage_list[i]))
 
     # return bacteria and phage coverages
-    return avg_b_coverages,avg_p_coverages
+    return avg_b_names, avg_b_coverages, avg_p_names, avg_p_coverages
 
+
+def write_out(sample_name, bact_name, bact_cov, phage_name, phage_cov):
+    final_out = open(sample_name+"_bact_phage_coverages.txt", "w")
+    final_out.write("bactMatches:"+str(bact_name).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
+    final_out.write("bactCovs:" + str(bact_cov).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
+    final_out.write("phageMatches:" + str(phage_name).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
+    final_out.write("phageCovs:" + str(phage_cov).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
+    final_out.close()
+
+    
 # calls
 assembly=process_raw_reads(fastqs[0],fastqs[1]) # i know we had pairs so I hardcoded this
 assembly=trim_assembly(assembly+'/contigs.fasta')
 b_sequence_file=categorize_assembled_contigs(assembly,phages)
-b_cov,p_cov=compute_coverage(b_sequence_file,phages,fastqs[0],fastqs[1]) # i know we had pairs so I hardcoded this
+b_name, b_cov, p_name, p_cov = compute_coverage(b_sequence_file, phages, fastqs[0], fastqs[1]) # i know we had pairs so I hardcoded this
+write_out(outpath_and_sample_name, b_name, b_cov, p_name, p_cov)
