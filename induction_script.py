@@ -3,40 +3,18 @@ import csv
 from Bio import SeqIO
 import copy
 
-# INPUTS
-
-#### THE SCRIPT SHOULD DO THIS & IT SHOULDN'T BE PASSED IN ####
-# input: spades assembly of reads to bacterial contigs
-bact_contigs_path='/Volumes/TaylorWorkD/Bowtieoutputs/AssembledBowties/C1355contB1354/'
-bact_contigs_file='contigs.fasta'
-#### THE SCRIPT SHOULD DO THIS & IT SHOULDN'T BE PASSED IN ####
-
-#### THIS HAS TO BE INPUTTED BY THE USER ####
-# input: phage sequences for the strain
-phage_sequences_path='/Users/taylormiller-ensminger/Desktop/TaylorThesisAll/PhagePredictionsAll/1354PhagePredicts/SecondTry/'
-phage_sequences_file='1354PhageAll2.fasta'
-#### THIS HAS TO BE INPUTTED BY THE USER ####
-
-# input: bbmap results file to the bacterial contigs
-# if you don't already have this, you could include this in the script to actually perform the bbmap
-bbmap_path_bact='/Volumes/TaylorWorkD/Bowtieoutputs/CovStats/'
-bbmap_file_bact='C1355contB1354covstats.txt'
-
-# input: bbmap results file to the phage predicted sequences
-# if you don't already have this, you could include this in the script to actually perform the bbmap
-bbmap_path_phage='/Volumes/TaylorWorkD/Bowtieoutputs/CovStats/FixedPhage/'
-bbmap_file_phage='C1355Pcont1354covstats.txt'
-
-
-# OUTPUT FOLDER
-output_file='/Users/taylormiller-ensminger/Desktop/1354Cont_output.csv'
+# INPUT FILES
+phages='/Users/putonti/Research/Projects/Induced_Finder/all_phages.fasta'
+fastqs=['/Users/putonti/Research/Projects/Induced_Finder/trimmed_13031ml_R1.fastq','/Users/putonti/Research/Projects/Induced_Finder/trimmed_13031ml_R2.fastq']
 
 
 # THIS IS MY PATH FOR MY TOOLS -- feel free to remove this here and from the below function
-path_of_tools = "/Users/genevieve/Downloads/tools_and_programs/"
+#path_of_tools = "/Users/genevieve/Downloads/tools_and_programs/"
+path_of_tools='/Users/putonti/Software/'
 
 # I didn't include paths for the input/output, can easily add those in as an argument
-## GJ -- assume that the fastqs are passed in with the paths (that's what I've done elsewhere) -- see comment on line 175
+## GJ -- assume that the fastqs are passed in with the paths (that's what I've done elsewhere)
+## GJ -- add threads to speed up SPAdes
 def process_raw_reads(*fastqs, platform='Illumina'):
     if len(fastqs) == 1:
         bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in="+fastqs[0]+" out=trimmed_"+fastqs[0]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
@@ -46,7 +24,8 @@ def process_raw_reads(*fastqs, platform='Illumina'):
         return fastqs[0].strip(".fastq.gz")+"_assembly"
     elif len(fastqs) == 2:
         bbduk_trim = path_of_tools+"bbmap/bbduk.sh -Xmx1G overwrite=t in1="+fastqs[0]+" in2="+fastqs[1]+" out1=trimmed_"+fastqs[0]+" out2=trimmed_"+fastqs[1]+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="+fastqs[0]+"_"+fastqs[1]+"_read_qualTrimming.stats statscolumns=5 trimq=20"
-        spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -1 trimmed_"+fastqs[0]+" -2 trimmed_"+fastqs[1]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        #spades_assembly = path_of_tools+"SPAdes-3.15.3-Darwin/bin/metaspades.py --only-assembler -1 trimmed_"+fastqs[0]+" -2 trimmed_"+fastqs[1]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
+        spades_assembly = path_of_tools+"SPAdes-3.13.0-Darwin/bin/metaspades.py --only-assembler -1 trimmed_"+fastqs[0]+" -2 trimmed_"+fastqs[1]+" -o "+fastqs[0].strip(".fastq.gz")+"_assembly"
         os.system(bbduk_trim)
         os.system(spades_assembly)
         return fastqs[0].strip(".fastq.gz")+"_assembly"
@@ -63,18 +42,19 @@ def trim_assembly(contigs):
                 f.write('>'+i.id+'\n'+str(i.seq)+'\n')
     return file_name
 
-def categorize_assembled_contigs(contigs,phage_sequences)
+## GJ -- you may need to change the version # for blast
+def categorize_assembled_contigs(contigs,phage_sequences):
     # create blast database of the predicted phage sequences
-    phage_name=phage_sequences[:phage_sequences.find('.')]
-    command='makeblastdb -in '+phage_sequences+' -out '+phage_name+' -title '+phage_name+' -dbtype nucl'
+    phage_name=phage_sequences[:phage_sequences.rfind('.')]
+    command=path_of_tools+'ncbi-blast-2.9.0+/bin/makeblastdb -in '+phage_sequences+' -out '+phage_name+' -title '+phage_name+' -dbtype nucl'
     os.system(command)  # uncomment to run
     
     # blast assembly against phage database to figure out which ones are phage
-    command='blastn -query '+contigs+' -db '+ phage_name+' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs pident length evalue bitscore" -out blastn_'+phage_name+'.csv'
+    command=path_of_tools+'ncbi-blast-2.9.0+/bin/blastn -query '+contigs+' -db '+ phage_name+' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs pident length evalue bitscore" -out '+phage_name+'_blastn.csv'
     os.system(command)
     
     # read in blast results
-    with open('blastn_'+phage_name+'.csv','r') as f:
+    with open(phage_name+'_blastn.csv','r') as f:
         fieldnames = ['qseqid','sseqid','qcovs','pident','length','evalue','bitscore']
         reader = csv.DictReader(f,fieldnames=fieldnames)
         blast_results= list(reader)
@@ -108,21 +88,28 @@ def categorize_assembled_contigs(contigs,phage_sequences)
         b,_=i
         q.append(b)
       
-    ## CP - needs to be rewritten to return the file names not the list of ids
-    for i in x:
-        if i.id not in q:
-            bacterial_contigs.append(i.id)
-        else:
-            phage_contigs.append(i.id)
-    return bacterial_contigs,phage_contigs
+    ## return the file of bacterial contigs
+    out_b=contigs[:contigs.rfind('/')]+'/filtered_'+contigs[contigs.rfind('/')+1:]
+    
+    with open(out_b,'w') as f:
+        for i in x:
+            if i.id not in q:
+                bacterial_contigs.append(i.id)
+                f.write('>'+i.id+'\n'+str(i.seq)+'\n')
+            else:
+                phage_contigs.append(i.id)
+    return out_b
+    
 
 def compute_coverage(bacterial_contigs,phage_sequences,*fastqs):
     # inputs for this are the assemblies for the bacteria, phage sequences and raw data
     
+    path_data=bacterial_contigs[:bacterial_contigs.rfind('/')+1]
+    
     # compute coverage for bacterial contigs
-    command=path_bbmap+'bbmap.sh ref='+bacterial_contigs+' in1='+fastqs[0]+' in2='+fastqs[1]+' out='+path_data+'test.sam basecov='+path_data+'basecov.try'
+    command=path_of_tools+'bbmap/bbmap.sh -Xmx1G overwrite=t ref='+bacterial_contigs+' in1='+fastqs[0]+' in2='+fastqs[1]+' out='+path_data+'test.sam basecov='+path_data+'basecov.try'
     print(command)
-    #os.system(command)
+    os.system(command)
 
     b_coverages=dict()
     with open(path_data+'basecov.try','r') as f:
@@ -140,9 +127,10 @@ def compute_coverage(bacterial_contigs,phage_sequences,*fastqs):
         avg_b_coverages[i]=sum(b_coverages[i])/len(b_coverages[i])
     
     # compute coverage for phage contigs
-    command=path_bbmap+'bbmap.sh ref='+phage_sequences+' in1='+fastqs[0]+' in2='+fastqs[1]+' out='+path_data+'test.sam basecov='+path_data+'basecov.try'
+    # IMPORTANT NOTE, PHAGE NAMES MUST BE UNIQUE OTHERWISE BBMAP EXPLODES
+    command=path_of_tools+'bbmap/bbmap.sh -Xmx1G overwrite=t ref='+phage_sequences+' in1='+fastqs[0]+' in2='+fastqs[1]+' out='+path_data+'test.sam basecov='+path_data+'basecov.try'
     print(command)
-    #os.system(command)
+    os.system(command)
 
     p_coverages=dict()
     with open(path_data+'basecov.try','r') as f:
@@ -173,10 +161,7 @@ def compute_coverage(bacterial_contigs,phage_sequences,*fastqs):
     return avg_b_coverages,avg_p_coverages
 
 # calls
-## all you need to declare here is the fastqs
-assembly=process_raw_reads(*fastqs, platform='Illumina')
-assmebly=trim_assembly(assembly+'/contigs.fasta')
-b_sequence_file,p_sequence_file=categorize_assembled_contigs(assembly,phage_sequence_file)
-b_cov,p_cov=compute_coverage(b_sequence_file,p_sequence_file,*fastqs)
-
-
+assembly=process_raw_reads(fastqs[0],fastqs[1]) # i know we had pairs so I hardcoded this
+assembly=trim_assembly(assembly+'/contigs.fasta')
+b_sequence_file=categorize_assembled_contigs(assembly,phages)
+b_cov,p_cov=compute_coverage(b_sequence_file,phages,fastqs[0],fastqs[1]) # i know we had pairs so I hardcoded this
