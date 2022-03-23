@@ -31,7 +31,8 @@ myArgs <- commandArgs(trailingOnly = TRUE)
 file_name<-myArgs[1]
 plot_name<-myArgs[2]
 threshold_number<-as.numeric(myArgs[3])
+outpath<-myArgs[4]
 
 rebels<-bootstrapping(file_name,plot_name,threshold_number)
 
-write.csv(rebels,"phages_exceeding_threshold.csv", row.names = FALSE)
+write.csv(rebels, paste(outpath,"_phages_exceeding_threshold.csv",sep=""), row.names = FALSE)
