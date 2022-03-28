@@ -13,7 +13,7 @@ def msg(name=None):
 parser=argparse.ArgumentParser(usage=msg())
 parser.add_argument('-o', '--output_path', action="store", metavar='<directory>', help='Directory to store resulting files and name of sample as file prefix (required)')
 parser.add_argument('-R', '--Rscript_path', action="store", metavar='<directory>', help='Directory location of local R application (required)')
-parser.add_argument('-r', '--R_code_path', action="store", metavar='<directory>', help='Directory location of supplemental R code file taylor_code.R (required)')
+parser.add_argument('-r', '--R_code_path', action="store", metavar='<directory>', help='Directory location of supplemental R code file induction_R_code.R (required)')
 parser.add_argument('-s', '--path_to_software_tools', action="store", metavar='<directory>', help='Directory location of software tools: SPAdes, bbmap, BLAST+ (required)')
 parser.add_argument('-t', '--num_threads', action="store", metavar='<int>', type=int, help='Number of processors to use.')
 parser.add_argument('-n', '--threshold', action="store", metavar='<int>', help='Threshold for phage coverages.')
