@@ -7,7 +7,7 @@ import subprocess
 
 
 def msg(name=None):
-    return '''induction_script_with_args.py -p phage_reference_file [read file options] -R Rscript_path -r R_code_path -s path_to_software_tools -o output_path_and_sample_name'''
+    return '''induction_script_with_args.py -f phage_reference_file [read file options] -R Rscript_path -r R_code_path -s path_to_software_tools -o output_path_and_sample_name'''
 
 
 parser=argparse.ArgumentParser(usage=msg())
