@@ -8,9 +8,7 @@ git clone https://github.com/putonti/induce_me.git
 
 ### Prerequisites
 
-- Biopython must be installed
-- bbmap, SPAdes, and BLAST+ must all be located in the same path
-- You will need to change the versions of SPAdes and BLAST+ within the python script
+Docker is the only prerequisite for this program to run, all other dependencies are handled by the Dockerfile. If any section of the program causes an error or is unable to run, check that you have enough memory in your Docker resources.
 
 ## Command Options
 
