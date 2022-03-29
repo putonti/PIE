@@ -16,8 +16,9 @@ parser.add_argument('-R', '--Rscript_path', action="store", metavar='<directory>
 parser.add_argument('-r', '--R_code_path', action="store", metavar='<directory>', help='Directory location of supplemental R code file induction_R_code.R (required)')
 parser.add_argument('-s', '--path_to_software_tools', action="store", metavar='<directory>', help='Directory location of software tools: SPAdes, bbmap, BLAST+ (required)')
 parser.add_argument('-t', '--num_threads', action="store", metavar='<int>', type=int, help='Number of processors to use.')
-parser.add_argument('-n', '--threshold', action="store", metavar='<int>', help='Threshold for phage coverages.')
+parser.add_argument('-n', '--threshold', action="store", metavar='<int>', help='Threshold for phage coverages.') # default 0.99
 parser.add_argument('-f', '--phage_reference_file', action="store", metavar='<filename>', help='Reference file of phage sequences (required)')
+parser.add_argument('-D', '--phage_discovery', action="store", metavar='<filename>', help='Run discovery mode for list of potential phages.') # default of no... No value associated with -D just if it's there then run this mode.
 group=parser.add_mutually_exclusive_group()
 group.add_argument('-i', '--single_read', action="store", metavar='<filename>', help='Single read file')
 group.add_argument('-p', '--paired_end_reads', action="store", nargs=2, metavar=('<filename>', '<filename>'), help='Paired-end read files. List both read files with a space between')
@@ -168,6 +169,8 @@ def compute_coverage(bacterial_contigs, phage_sequences, *fastqs):
 
     # compute coverage for phage contigs
     # IMPORTANT NOTE, PHAGE NAMES MUST BE UNIQUE OTHERWISE BBMAP EXPLODES
+    
+    # if "Discovery" mode is on, then bbmap maps to individual phage sequences, else do it like this.
     command = path_of_tools + 'bbmap/bbmap.sh -Xmx1G overwrite=t ref=' + phage_sequences + ' in1=' + fastqs[
         0] + ' in2=' + fastqs[1] + ' out=' + path_data + 'test.sam basecov=' + path_data + 'basecov.try'
     print(command)
