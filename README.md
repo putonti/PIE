@@ -1,4 +1,3 @@
-# codename: induce_me
 # PIE - Prophage Induction Estimator
 
 ## Getting Started
@@ -16,8 +15,6 @@ git clone https://github.com/putonti/induce_me.git
 ## Command Options
 
 * -o : Directory to store resulting files and name of sample as file prefix
-* -R : Directory location of local R application
-* -r : Directory location of supplemental R code file taylor_code.R
 * -s : Directory location of software tools: SPAdes, bbmap, BLAST+
 * -t : Number of processors to use
 * -n : Threshold for phage coverages
