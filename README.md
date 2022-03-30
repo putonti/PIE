@@ -34,7 +34,7 @@ Single or Paired-End Read Inputs:
 
 ### Example Run with Paired-End Reads:
 ```python
-python3 induction_script_with_args.py -f phage_reference_file -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o output_path
+python3 dokcer_induction_script_with_args.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o induceMeDockerOutputFolder/sample_output
 ```
 
 ## Further Details:
