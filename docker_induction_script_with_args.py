@@ -7,15 +7,14 @@ import subprocess
 
 
 def msg(name=None):
-    return '''induction_script_with_args.py -f phage_reference_file [read file options] -s sample_name -o output_path'''
+    return '''docker_induction_script_with_args.py -f phage_reference_file [read file options] -s sample_name -o output_path'''
 
 parser=argparse.ArgumentParser(usage=msg())
 parser.add_argument('-o', '--output_path', action="store", metavar='<directory>', help='Directory to store resulting files (required)')
 parser.add_argument('-s', '--sample_name', action="store", metavar='<str>', help='Name of sample for output file labels (required)')
 parser.add_argument('-t', '--num_threads', action="store", metavar='<int>', type=int, default = 4, help='Number of processors to use (default=4)')
-parser.add_argument('-n', '--threshold', action="store", metavar='<int>', default=0.99, help='Threshold for phage coverages (default=0.99)')
+parser.add_argument('-n', '--threshold', action="store", metavar='<int>', default="0.99", help='Threshold for phage coverages (default=0.99)')
 parser.add_argument('-f', '--phage_reference_file', action="store", metavar='<filename>', help='Reference file of phage sequences (required)')
-parser.add_argument('-D', '--phage_discovery', action='store_true', help='Run discovery mode for list of potential phages.')
 group=parser.add_mutually_exclusive_group()
 group.add_argument('-i', '--single_read', action="store", metavar='<filename>', help='Single read file')
 group.add_argument('-p', '--paired_end_reads', action="store", nargs=2, metavar=('<filename>', '<filename>'), help='Paired-end read files. List both read files with a space between')
@@ -131,19 +130,82 @@ def categorize_assembled_contigs(contigs, phage_sequences):
     return out_b
 
 
-def compute_coverage(bacterial_contigs, phage_sequences, *fastqs):
+def compute_phage_coverage(phage_sequences, *fastqs):
     # inputs for this are the assemblies for the bacteria, phage sequences and raw data
 
-    path_data = bacterial_contigs[:bacterial_contigs.rfind('/') + 1]
+    path_data = args.output_path
+    path_data_temp=path_data+'/temp/'
+    os.system('mkdir '+path_data_temp)
+    x=list(SeqIO.parse(phage_sequences,'fasta'))
 
+    avg_p_names = []
+    avg_p_coverages = []
+    
+    # map to each phage sequence independently
+    for i in x:
+        f_out=open(path_data_temp+'temp.fasta','w')
+        f_out.write('>'+i.id+'\n'+str(i.seq))
+        f_out.close()
+
+        # compute coverage for phage contigs
+        # IMPORTANT NOTE, PHAGE NAMES MUST BE UNIQUE OTHERWISE BBMAP EXPLODES
+        if len(fastqs)==2:
+            command = 'bbmap.sh -Xmx1G overwrite=t ref=' + path_data_temp + 'temp.fasta in1=' + fastqs[
+                0] + ' in2=' + fastqs[1] + ' out=' + path_data_temp + 'test.sam basecov=' + path_data_temp + 'basecov.try'
+        else:
+            command = 'bbmap.sh -Xmx1G overwrite=t ref=' + path_data_temp + 'temp.fasta in=' + fastqs[
+                0] + ' out=' + path_data_temp + 'test.sam basecov=' + path_data_temp + 'basecov.try'
+        os.system(command)     
+    
+        p_coverages = dict()
+        with open(path_data_temp + 'basecov.try', 'r') as f:
+            lines = f.readlines()
+        for i in lines[1:]:
+            x = i.strip().split('\t')
+            if x[0] not in p_coverages.keys():
+                p_coverages[x[0]] = []
+            p_coverages[x[0]].append(int(x[2]))
+    
+        # remove phage values that are insignificant (not evenness of coverage)
+        # threshold at 10%+300
+        revised_phage_list = dict()
+        for i in p_coverages:
+            length = len(p_coverages[i])
+            threshold = length // 10 + 300
+            if p_coverages[i].count(0) < threshold:
+                revised_phage_list[i] = copy.deepcopy(p_coverages[i])
+                p_coverages[i].clear()
+        p_coverages.clear()
+    
+        # calculate average coverages for phages
+        for i in revised_phage_list:
+            avg_p_names.append(i)
+            avg_p_coverages.append(sum(revised_phage_list[i]) / len(revised_phage_list[i]))
+
+    # delete temporary folder
+    os.system('rm -r '+path_data_temp)
+    # return phage coverages
+    return avg_p_names, avg_p_coverages
+
+
+def compute_bacterial_coverage(bacterial_contigs, *fastqs):
+    # inputs for this are the assemblies for the bacteria and raw data
+
+    path_data = args.output_path
+    path_data_temp=path_data+'/temp/'
+    os.system('mkdir '+path_data_temp)
+    
     # compute coverage for bacterial contigs
-    command = 'bbmap.sh -Xmx1G overwrite=t ref=' + bacterial_contigs + ' in1=' + fastqs[
-        0] + ' in2=' + fastqs[1] + ' out=' + path_data + 'test.sam basecov=' + path_data + 'basecov.try'
-    print(command)
+    if len(fastqs)==2:
+        command = 'bbmap.sh -Xmx1G overwrite=t ref=' + bacterial_contigs + ' in1=' + fastqs[
+            0] + ' in2=' + fastqs[1] + ' out=' + path_data_temp + 'test.sam basecov=' + path_data_temp + 'basecov.try'
+    else:
+        command = 'bbmap.sh -Xmx1G overwrite=t ref=' + bacterial_contigs + ' in=' + fastqs[
+            0] + ' out=' + path_data_temp + 'test.sam basecov=' + path_data_temp + 'basecov.try'   
     os.system(command)
 
     b_coverages = dict()
-    with open(path_data + 'basecov.try', 'r') as f:
+    with open(path_data_temp + 'basecov.try', 'r') as f:
         lines = f.readlines()
     for i in lines[1:]:
         x = i.strip().split('\t')
@@ -159,42 +221,11 @@ def compute_coverage(bacterial_contigs, phage_sequences, *fastqs):
         avg_b_names.append(i)
         avg_b_coverages.append(sum(b_coverages[i]) / len(b_coverages[i]))
 
-    # compute coverage for phage contigs
-    # IMPORTANT NOTE, PHAGE NAMES MUST BE UNIQUE OTHERWISE BBMAP EXPLODES
-    command = 'bbmap.sh -Xmx1G overwrite=t ref=' + phage_sequences + ' in1=' + fastqs[
-        0] + ' in2=' + fastqs[1] + ' out=' + path_data + 'test.sam basecov=' + path_data + 'basecov.try'
-    print(command)
-    os.system(command)
+    # delete temporary folder
+    os.system('rm -r '+path_data_temp)
 
-    p_coverages = dict()
-    with open(path_data + 'basecov.try', 'r') as f:
-        lines = f.readlines()
-    for i in lines[1:]:
-        x = i.strip().split('\t')
-        if x[0] not in p_coverages.keys():
-            p_coverages[x[0]] = []
-        p_coverages[x[0]].append(int(x[2]))
-
-    # remove phage values that are insignificant (not evenness of coverage)
-    # threshold at 10%+300
-    revised_phage_list = dict()
-    for i in p_coverages:
-        length = len(p_coverages[i])
-        threshold = length // 10 + 300
-        if p_coverages[i].count(0) < threshold:
-            revised_phage_list[i] = copy.deepcopy(p_coverages[i])
-            p_coverages[i].clear()
-    p_coverages.clear()
-
-    # calculate average coverages for phages
-    avg_p_names = []
-    avg_p_coverages = []
-    for i in revised_phage_list:
-        avg_p_names.append(i)
-        avg_p_coverages.append(sum(revised_phage_list[i]) / len(revised_phage_list[i]))
-
-    # return bacteria and phage coverages
-    return avg_b_names, avg_b_coverages, avg_p_names, avg_p_coverages
+    # return bacteria coverages
+    return avg_b_names, avg_b_coverages
 
 
 def write_out(out_path, samp_name, bact_name, bact_cov, phage_name, phage_cov):
@@ -226,14 +257,30 @@ assembly = trim_assembly(assembly + '/contigs.fasta')
 b_sequence_file = categorize_assembled_contigs(assembly, args.phage_reference_file)
 
 if args.paired_end_reads is not None:
-    b_name, b_cov, p_name, p_cov = compute_coverage(b_sequence_file, args.phage_reference_file, args.paired_end_reads[0], args.paired_end_reads[1])
+    p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.paired_end_reads[0], args.paired_end_reads[1])
 elif args.single_read is not None:
-    b_name, b_cov, p_name, p_cov = compute_coverage(b_sequence_file, args.phage_reference_file, args.single_read)
+    p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.single_read)
 else:
     parser.error('Reads must be provided for analysis.')
 
+# check that there are bacterial contigs
+x=list(SeqIO.parse(b_sequence_file,'fasta'))
+if len(x)==0:
+    # there are no bacterial contigs, just phage
+    phage_out = open(args.output_path+"/"+args.sample_name+"_phages_exceeding_threshold.csv","w")
+    phage_out.write("rebel_names,rebel_coverages"+"\n")
+    for i in range(len(p_name)):
+        phage_out.write(str(p_name[i])+","+str(p_cov[i])+"\n")
+    phage_out.close()
+else:
+    if args.paired_end_reads is not None:
+        b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.paired_end_reads[0], args.paired_end_reads[1])
+    elif args.single_read is not None:
+        b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.single_read)
+    else:
+        parser.error('Reads must be provided for analysis.')    
 
-write_out(args.output_path, args.sample_name, b_name, b_cov, p_name, p_cov)
+    write_out(args.output_path, args.sample_name, b_name, b_cov, p_name, p_cov)
 
-subprocess.call(["Rscript","induction_R_code.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
+    subprocess.call(["Rscript","docker_induction_R_code.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
 
