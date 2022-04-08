@@ -68,15 +68,17 @@ def process_raw_reads(*fastqs, num_threads=4):
         print("Expected 1 or 2 fastq files. Please check fastq files and try again.")
 
 
-def trim_assembly(contigs):
+def trim_assembly(contigs,threshold):
     # remove contigs that are less than 1000 bp
     c = list(SeqIO.parse(contigs, 'fasta'))
     file_name = contigs[:contigs.rfind(".")] + "_trimmed.fasta"
+    failed_threshold=True
     with open(file_name, 'w') as f:
         for i in c:
-            if len(str(i.seq)) >= 1000:
+            if len(str(i.seq)) >= threshold:
                 f.write('>' + i.id + '\n' + str(i.seq) + '\n')
-    return file_name
+                failed_threshold=False
+    return file_name,failed_threshold
 
 
 def categorize_assembled_contigs(contigs, phage_sequences):
@@ -258,33 +260,43 @@ else:
     else:
         parser.error('Reads must be provided for analysis.')
 
-assembly = trim_assembly(assembly + '/contigs.fasta')
-b_sequence_file = categorize_assembled_contigs(assembly, args.phage_reference_file)
+# threshold for trimming reads is based upon the smallest phage sequence
+ps=list(SeqIO.parse(args.phage_reference_file,'fasta'))
+trim_threshold=0
+for i in ps:
+    if len(str(i.seq))<trim_threshold:
+        trim_threshold=len(str(i.seq))
+trim_threshold=trim_threshold-(trim_threshold // 10 + 300)
+assembly,failed_t = trim_assembly(assembly + '/contigs.fasta', trim_threshold)
+if failed_t is True:
+    print('No contigs passed the filter. No phages are found.')
+ else:
+    b_sequence_file = categorize_assembled_contigs(assembly, args.phage_reference_file)
 
-if args.paired_end_reads is not None:
-    p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.paired_end_reads[0], args.paired_end_reads[1])
-elif args.single_read is not None:
-    p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.single_read)
-else:
-    parser.error('Reads must be provided for analysis.')
-
-# check that there are bacterial contigs
-x=list(SeqIO.parse(b_sequence_file,'fasta'))
-if len(x)==0:
-    phage_out = open(args.output_path+"_phages_exceeding_threshold.csv","w")
-    phage_out.write("rebel_names,rebel_coverages"+"\n")
-    # there are no bacterial contigs, just phage
-    for i in range(len(p_name)):
-        phage_out.write(str(p_name[i])+","+str(p_cov[i])+"\n")
-    phage_out.close()
-else:
     if args.paired_end_reads is not None:
-        b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.paired_end_reads[0], args.paired_end_reads[1])
+        p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.paired_end_reads[0], args.paired_end_reads[1])
     elif args.single_read is not None:
-        b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.single_read)
+        p_name, p_cov = compute_phage_coverage(args.phage_reference_file, args.single_read)
     else:
         parser.error('Reads must be provided for analysis.')
-    
-    write_out(args.output_path, b_name, b_cov, p_name, p_cov)
-    
-    subprocess.call([args.Rscript_path, args.R_code_path, args.output_path+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path])
+
+    # check that there are bacterial contigs
+    x=list(SeqIO.parse(b_sequence_file,'fasta'))
+    if len(x)==0:
+        phage_out = open(args.output_path+"_phages_exceeding_threshold.csv","w")
+        phage_out.write("rebel_names,rebel_coverages"+"\n")
+        # there are no bacterial contigs, just phage
+        for i in range(len(p_name)):
+            phage_out.write(str(p_name[i])+","+str(p_cov[i])+"\n")
+        phage_out.close()
+    else:
+        if args.paired_end_reads is not None:
+            b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.paired_end_reads[0], args.paired_end_reads[1])
+        elif args.single_read is not None:
+            b_name, b_cov = compute_bacterial_coverage(b_sequence_file, args.single_read)
+        else:
+            parser.error('Reads must be provided for analysis.')
+
+        write_out(args.output_path, b_name, b_cov, p_name, p_cov)
+
+        subprocess.call([args.Rscript_path, args.R_code_path, args.output_path+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path])
