@@ -7,7 +7,7 @@ import subprocess
 
 
 def msg(name=None):
-    return '''Apr5_version.py -f phage_reference_file [read file options] -R Rscript_path -r R_code_path -s path_to_software_tools -o output_path_and_sample_name'''
+    return '''induction_script_with_args.py -f phage_reference_file [read file options] -R Rscript_path -r R_code_path -s path_to_software_tools -o output_path_and_sample_name'''
 
 
 parser=argparse.ArgumentParser(usage=msg())
@@ -16,7 +16,7 @@ parser.add_argument('-R', '--Rscript_path', action="store", metavar='<directory>
 parser.add_argument('-r', '--R_code_path', action="store", metavar='<directory>', help='Directory location of supplemental R code file induction_R_code.R (required)')
 parser.add_argument('-s', '--path_to_software_tools', action="store", metavar='<directory>', help='Directory location of software tools: SPAdes, bbmap, BLAST+ (required)')
 parser.add_argument('-t', '--num_threads', action="store", metavar='<int>', type=int, help='Number of processors to use.')
-parser.add_argument('-n', '--threshold', action="store", metavar='<int>', help='Threshold for phage coverages.') # default 0.99
+parser.add_argument('-n', '--threshold', action="store", metavar='<int>', default="0.99", help='Threshold for phage coverages (default=0.99)')
 parser.add_argument('-f', '--phage_reference_file', action="store", metavar='<filename>', help='Reference file of phage sequences (required)')
 group=parser.add_mutually_exclusive_group()
 group.add_argument('-i', '--single_read', action="store", metavar='<filename>', help='Single read file')
@@ -67,7 +67,7 @@ def process_raw_reads(*fastqs, num_threads=4):
     else:
         print("Expected 1 or 2 fastq files. Please check fastq files and try again.")
 
-
+##DIFFERENT
 def trim_assembly(contigs,threshold):
     # remove contigs that are less than 1000 bp
     c = list(SeqIO.parse(contigs, 'fasta'))
@@ -79,7 +79,7 @@ def trim_assembly(contigs,threshold):
                 f.write('>' + i.id + '\n' + str(i.seq) + '\n')
                 failed_threshold=False
     return file_name,failed_threshold
-
+##END
 
 def categorize_assembled_contigs(contigs, phage_sequences):
     # create blast database of the predicted phage sequences
@@ -260,6 +260,7 @@ else:
     else:
         parser.error('Reads must be provided for analysis.')
 
+##DIFFERENT
 # threshold for trimming reads is based upon the smallest phage sequence
 ps=list(SeqIO.parse(args.phage_reference_file,'fasta'))
 trim_threshold=0
@@ -270,7 +271,7 @@ trim_threshold=trim_threshold-(trim_threshold // 10 + 300)
 assembly,failed_t = trim_assembly(assembly + '/contigs.fasta', trim_threshold)
 if failed_t is True:
     print('No contigs passed the filter. No phages are found.')
- else:
+else:
     b_sequence_file = categorize_assembled_contigs(assembly, args.phage_reference_file)
 
     if args.paired_end_reads is not None:
@@ -300,3 +301,4 @@ if failed_t is True:
         write_out(args.output_path, b_name, b_cov, p_name, p_cov)
 
         subprocess.call([args.Rscript_path, args.R_code_path, args.output_path+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path])
+##END
