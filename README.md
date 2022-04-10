@@ -24,7 +24,6 @@ Docker is the only prerequisite for this program to run, all other dependencies 
 * -t : Number of processors to use (default=4)
 * -n : Threshold for phage coverages (default=0.99)
 * -f : Reference file of phage sequences (required)
-* -D : Run discovery mode for list of potential phages
 * --version
 
 Single or Paired-End Read Inputs:
@@ -45,3 +44,4 @@ A manuscript describing further details is currently in preparation.
 * Taylor Miller-Ensminger
 * Genevieve Johnson
 * Catherine Putonti
+* Swarnali Banerjee
