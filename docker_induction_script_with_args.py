@@ -80,55 +80,75 @@ def categorize_assembled_contigs(contigs, phage_sequences):
     command = 'makeblastdb -in ' + phage_sequences + ' -out ' + phage_name + ' -title ' + phage_name + ' -dbtype nucl'
     os.system(command)  # uncomment to run
 
-    # blast assembly against phage database to figure out which ones are phage
-    command = 'blastn -query ' + contigs + ' -db ' + phage_name + ' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs pident length evalue bitscore" -out ' + phage_name + '_blastn.csv'
-    os.system(command)
+    cat_complete = False  # flag to repeat BLAST characterization if a prophage is found within a bacterial contig
+    while cat_complete == False:
+        cat_complete = True
 
-    # read in blast results
-    with open(phage_name + '_blastn.csv', 'r') as f:
-        fieldnames = ['qseqid', 'sseqid', 'qcovs', 'pident', 'length', 'evalue', 'bitscore']
-        reader = csv.DictReader(f, fieldnames=fieldnames)
-        blast_results = list(reader)
+        # blast assembly against phage database to figure out which ones are phage
+        command = 'blastn -query ' + contigs + ' -db ' + phage_name + ' -max_target_seqs 1 -outfmt="10 qseqid sseqid qcovs qstart qend pident length evalue bitscore" -out ' + phage_name + '_blastn.csv'
+        os.system(command)
 
-    # grab top hit for each blast result
-    top_hits = dict()
-    for i in blast_results:
-        pair = (i['qseqid'], i['sseqid'])
-        if pair in top_hits.keys():
-            q, p, b = top_hits[pair]
-            if float(i['bitscore']) > float(b):
-                top_hits[pair] = (i['qcovs'], i['pident'], i['bitscore'])
-        else:
-            top_hits[pair] = (i['qcovs'], i['pident'], i['bitscore'])
+        # read in blast results
+        with open(phage_name + '_blastn.csv', 'r') as f:
+            fieldnames = ['qseqid', 'sseqid', 'qcovs', 'qstart', 'qend', 'pident', 'length', 'evalue', 'bitscore']
+            reader = csv.DictReader(f, fieldnames=fieldnames)
+            blast_results = list(reader)
 
-    # toss garbage -- qcov < 90%
-    phage_hits = dict()
-    for i in top_hits:
-        q, p, b = top_hits[i]
-        if float(q) >= 90:
-            phage_hits[i] = top_hits[i]
-
-    # make lists of the bacterial contigs that are really bacterial
-    bacterial_contigs = list()
-    # make list of the phage sequences detected -- don't actually need
-    phage_contigs = list()
-
-    x = list(SeqIO.parse(contigs, 'fasta'))
-    q = []  # list of bacterial contigs with hits to phage
-    for i in phage_hits:
-        b, _ = i
-        q.append(b)
-
-    ## return the file of bacterial contigs
-    out_b = contigs[:contigs.rfind('/')] + '/filtered_' + contigs[contigs.rfind('/') + 1:]
-
-    with open(out_b, 'w') as f:
-        for i in x:
-            if i.id not in q:
-                bacterial_contigs.append(i.id)
-                f.write('>' + i.id + '\n' + str(i.seq) + '\n')
+        # grab top hit for each blast result
+        top_hits = dict()
+        for i in blast_results:
+            pair = (i['qseqid'], i['sseqid'])
+            if pair in top_hits.keys():
+                q, p, b, l, qs, qe = top_hits[pair]
+                if float(i['bitscore']) > float(b):
+                    top_hits[pair] = (
+                    float(i['qcovs']), float(i['pident']), float(i['bitscore']), float(i['length']), int(i['qstart']),
+                    int(i['qend']))
             else:
-                phage_contigs.append(i.id)
+                top_hits[pair] = (
+                float(i['qcovs']), float(i['pident']), float(i['bitscore']), float(i['length']), int(i['qstart']),
+                int(i['qend']))
+
+        x = list(SeqIO.parse(phage_sequences, 'fasta'))
+        lengths = dict()
+        for i in x:
+            lengths[i.id] = len(str(i.seq))
+
+        # toss garbage -- qcov < 90% and length < 90% of the phage sequence
+        phage_hits = dict()
+        for i in top_hits:
+            q, p, b, l, qs, qe = top_hits[i]
+            if q >= 90 or l >= (lengths[i[1]] * 0.9):
+                phage_hits[i] = top_hits[i]
+
+        # retrieve all bacterial sequences
+        x = list(SeqIO.parse(contigs, 'fasta'))
+        bacteria = dict()
+        for i in x:
+            bacteria[i.id] = str(i.seq)
+        del x
+
+        for i in phage_hits:
+            q, p, b, l, qs, qe = phage_hits[i]
+            if q >= 90:
+                del bacteria[i[0]]
+            else:
+                if qs > qe:
+                    qe, qs = qs, qe
+                if qs - 1 != 0:
+                    bacteria[i[0] + '_start'] = bacteria[i[0]][:qs - 1]
+                if qe != len(bacteria[i[0]]):
+                    bacteria[i[0] + '_end'] = bacteria[i[0]][qe:]
+                del bacteria[i[0]]
+                cat_complete = False  # a bacterial contig was split; set to false to rerun categorization
+
+        ## return the file of bacterial contigs
+        out_b = contigs[:contigs.rfind('/')] + '/filtered_' + contigs[contigs.rfind('/') + 1:]
+        with open(out_b, 'w') as f:
+            for i in bacteria:
+                f.write('>' + i + '\n' + bacteria[i] + '\n')
+        contigs = out_b
+
     return out_b
 
 
