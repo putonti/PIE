@@ -10,7 +10,7 @@ Move input fastq files, as well as the phages reference file, to the inputFiles 
 sudo docker build --tag pie:latest PIE
 ```
 ```python
-sudo docker run -v ~/pathToLocalFolder/pie:/pieDockerOutputFolder -i -t pie
+sudo docker run -v ~/pathToLocalFolder/PIE:/pieDockerOutputFolder -i -t pie
 ```
 
 ### Prerequisites
