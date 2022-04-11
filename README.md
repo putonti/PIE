@@ -3,14 +3,14 @@
 ## Getting Started
 Clone Project from GitHub
 ```python
-git clone https://github.com/putonti/induce_me.git
+git clone https://github.com/putonti/PIE.git
 ```
 Move input fastq files, as well as the phages reference file, to the inputFiles folder prior to building the docker image.
 ```python
-sudo docker build --tag induce_me:latest induce_me
+sudo docker build --tag PIE:latest PIE
 ```
 ```python
-sudo docker run -v ~/pathToLocalFolder/induce_me:/induceMeDockerOutputFolder -i -t induce_me
+sudo docker run -v ~/pathToLocalFolder/PIE:/PIEDockerOutputFolder -i -t PIE
 ```
 
 ### Prerequisites
@@ -33,7 +33,7 @@ Single or Paired-End Read Inputs:
 
 ### Example Run with Paired-End Reads:
 ```python
-python3 dokcer_induction_script_with_args.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o induceMeDockerOutputFolder/sample_output
+python3 docker_induction_script_with_args.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o PIEDockerOutputFolder/sample_output
 ```
 
 ## Further Details:
