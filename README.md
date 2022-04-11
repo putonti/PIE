@@ -7,10 +7,10 @@ git clone https://github.com/putonti/PIE.git
 ```
 Move input fastq files, as well as the phages reference file, to the inputFiles folder prior to building the docker image.
 ```python
-sudo docker build --tag PIE:latest PIE
+sudo docker build --tag pie:latest pie
 ```
 ```python
-sudo docker run -v ~/pathToLocalFolder/PIE:/PIEDockerOutputFolder -i -t PIE
+sudo docker run -v ~/pathToLocalFolder/pie:/pieDockerOutputFolder -i -t pie
 ```
 
 ### Prerequisites
