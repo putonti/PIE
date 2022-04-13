@@ -1,0 +1,33 @@
+PIE Commands
+
+1. open terminal
+2. in terminal, pull PIE from github:
+	git clone https://github.com/putonti/PIE.git
+
+3. move to PIE directory
+	cd PIE
+
+
+4. move your paired-end or single fastq files, as well as the phage reference file, to the inputFiles folder
+
+5. build PIE
+	sudo docker build --tag pie:latest PIE
+
+6. run PIE
+	sudo docker run -v ~/local_machine_docker_folder:/pieOutputFolderName -i -t pie
+(The folder pieOutputFolderName is specified by the user. This is the folder name to be used later when invoking PIE.)
+
+7. you are ready to use PIE. Type python3 runPIE.py -h to see command line options, e.g.
+	-o : Directory to store resulting files and name of sample as file prefix (required)
+	-s : Name of sample for output file labels (required)
+	-t : Number of processors to use (default=4)
+	-n : Threshold for phage coverages (default=0.99)
+	-f : Reference file of phage sequences (required)
+	--version
+
+	Single or Paired-End Read Inputs:
+	-i : Single read file
+	-p : Paired-end read files. List both read files with a space between
+
+   example:
+	python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
