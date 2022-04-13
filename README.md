@@ -33,7 +33,7 @@ Single or Paired-End Read Inputs:
 
 ### Example Run with Paired-End Reads:
 ```python
-python3 docker_induction_script_with_args.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o PIEDockerOutputFolder/sample_output
+python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o PIEDockerOutputFolder/sample_output
 ```
 
 ## Further Details:
