@@ -1,0 +1,1 @@
+place input read files and phage reference file here before building docker image
