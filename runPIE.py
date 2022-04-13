@@ -317,4 +317,4 @@ else:
 
         write_out(args.output_path, args.sample_name, b_name, b_cov, p_name, p_cov)
 
-        subprocess.call(["Rscript","PIE_R_script.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
+        subprocess.call(["Rscript","calculatePIE.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
