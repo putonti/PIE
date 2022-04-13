@@ -7,7 +7,7 @@ import subprocess
 
 
 def msg(name=None):
-    return '''docker_induction_script_with_args.py -f phage_reference_file [read file options] -s sample_name -o output_path'''
+    return '''runPIE.py -f phage_reference_file [read file options] -s sample_name -o output_path'''
 
 parser=argparse.ArgumentParser(usage=msg())
 parser.add_argument('-o', '--output_path', action="store", metavar='<directory>', help='Directory to store resulting files (required)')
@@ -317,4 +317,4 @@ else:
 
         write_out(args.output_path, args.sample_name, b_name, b_cov, p_name, p_cov)
 
-        subprocess.call(["Rscript","docker_induction_R_code.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
+        subprocess.call(["Rscript","PIE_R_script.R",args.output_path+"/"+args.sample_name+"_bact_phage_coverages.txt", "Density Plot", args.threshold, args.output_path, args.sample_name])
