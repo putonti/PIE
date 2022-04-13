@@ -158,15 +158,15 @@ def compute_phage_coverage(phage_sequences, *fastqs):
     path_data = args.output_path
     path_data_temp=path_data+'/temp/'
     os.system('mkdir '+path_data_temp)
-    x=list(SeqIO.parse(phage_sequences,'fasta'))
+    phage_seqs=list(SeqIO.parse(phage_sequences,'fasta'))
 
     avg_p_names = []
     avg_p_coverages = []
     
     # map to each phage sequence independently
-    for i in x:
+    for loopy in phage_seqs:
         f_out=open(path_data_temp+'temp.fasta','w')
-        f_out.write('>'+i.id+'\n'+str(i.seq))
+        f_out.write('>'+loopy.id+'\n'+str(loopy.seq))
         f_out.close()
 
         # compute coverage for phage contigs
@@ -280,7 +280,7 @@ else:
 
 # threshold for trimming reads is based upon the smallest phage sequence
 ps=list(SeqIO.parse(args.phage_reference_file,'fasta'))
-trim_threshold=0
+trim_threshold=1000000
 for i in ps:
     if len(str(i.seq))<trim_threshold:
         trim_threshold=len(str(i.seq))
