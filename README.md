@@ -10,7 +10,7 @@ Move input fastq files, as well as the phages reference file, to the inputFiles 
 sudo docker build --tag pie:latest PIE
 ```
 ```python
-sudo docker run -v ~/pathToLocalFolder/PIE:/pieDockerOutputFolder -i -t pie
+sudo docker run -v ~/pathToLocalFolder/PIE:/pieOutputFolderName -i -t pie
 ```
 
 ### Prerequisites
@@ -33,7 +33,7 @@ Single or Paired-End Read Inputs:
 
 ### Example Run with Paired-End Reads:
 ```python
-python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o pieDockerOutputFolder/sample_output
+python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
 
 ## Further Details:
