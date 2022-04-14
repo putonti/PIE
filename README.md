@@ -40,6 +40,19 @@ python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fast
 python3 runPIE.py -f inputFiles/phage_reference_file.fasta -i inputFiles/single_read_file.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
 
+## Test Data and Example Output
+SRR7534266
+```python
+prefetch SRR7534266
+fastq-dump --split-files SRR7534266
+```
+Move SRR7534266 paired-end reads to testFiles folder before building docker image.
+The phage reference file is already included in the testFiles folder.
+### Example Run of Test Data:
+```python
+python3 runPIE.py -f testFiles/test_phage_reference.fasta -p testFiles/SRR7534266_1.fastq testFiles/SRR7534266_2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
+```
+
 ## Further Details:
 A manuscript describing further details is currently in preparation.
 
