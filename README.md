@@ -35,6 +35,10 @@ Single or Paired-End Read Inputs:
 ```python
 python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
+### Example Run with Single Read:
+```python
+python3 runPIE.py -f inputFiles/phage_reference_file.fasta -i inputFiles/single_read_file.fastq -s sample_name -o pieOutputFolderName/sample_output
+```
 
 ## Further Details:
 A manuscript describing further details is currently in preparation.
