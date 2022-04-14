@@ -12,6 +12,7 @@ ADD runPIE.py runPIE.py
 ADD calculatePIE.R calculatePIE.R
 ADD SPAdes-3.15.3-Linux.tar.gz spades
 ADD /inputFiles/ /inputFiles/
+ADD /testFiles/ /testFiles/
 RUN pip install --upgrade pip
 RUN python3 -m pip install biopython
 
