@@ -41,17 +41,11 @@ python3 runPIE.py -f inputFiles/phage_reference_file.fasta -i inputFiles/single_
 ```
 
 ## Test Data and Example Output
-SRR7534266 is used for the test data paired-end reads. SRR7534266 can be manually downloaded or SRA-Toolkit can be used.
-### Commands if using SRA-Toolkit:
-```python
-prefetch SRR7534266
-fastq-dump --split-files SRR7534266
-```
-Move SRR7534266 paired-end reads to testFiles folder before building docker image.
-The phage reference file is already included in the testFiles folder.
+Paired-end reads of a small bacterial community is used for the test data.
+The phage reference file is already included in the testFiles folder and contains 10 sample phage sequences.
 ### Example Run of Test Data:
 ```python
-python3 runPIE.py -f testFiles/test_phage_reference.fasta -p testFiles/SRR7534266_1.fastq testFiles/SRR7534266_2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
+python3 runPIE.py -f testFiles/test_phage_reference.fasta -p testFiles/test_data_R1.fastq testFiles/test_data_R2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
 ```
 
 ## Further Details:
