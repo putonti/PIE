@@ -1,6 +1,7 @@
 # PIE - Prophage Induction Estimator
 
 ## Getting Started
+### Option 1:
 Clone Project from GitHub
 ```python
 git clone https://github.com/putonti/PIE.git
@@ -11,6 +12,15 @@ sudo docker build --tag pie:latest PIE
 ```
 ```python
 sudo docker run -v ~/pathToLocalFolder/PIE:/pieOutputFolderName -i -t pie
+```
+### Option 2:
+Docker Hub Link: https://hub.docker.com/repository/docker/genevievej16/pie
+```python
+docker pull genevievej16/pie:latest
+```
+Move input fastq files, as well as the phages reference file, to your local designated output folder prior to running the docker image. While in the docker you will access the input files from the pieOutputFolderName folder rather than from the inputFiles folder.
+```python
+sudo docker run -v ~/pathToLocalFolder/PIE:/pieOutputFolderName -i -t genevievej16/pie
 ```
 
 ### Prerequisites
