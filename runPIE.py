@@ -254,7 +254,7 @@ def write_out(out_path, samp_name, bact_name, bact_cov, phage_name, phage_cov):
     final_out = open(out_path+"/"+samp_name+"_bact_phage_coverages.txt", "w")
     final_out.write("bactMatches:"+str(bact_name).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
     final_out.write("bactCovs:" + str(bact_cov).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
-    final_out.write("phageMatches:" + str(phage_name).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
+    final_out.write("phageMatches:" + str(phage_name).strip("[").strip("]").strip(" ").replace("'", "").replace(":","_")+"\n")
     final_out.write("phageCovs:" + str(phage_cov).strip("[").strip("]").strip(" ").replace("'", "")+"\n")
     final_out.close()
 
