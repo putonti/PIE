@@ -43,11 +43,11 @@ Single or Paired-End Read Inputs:
 
 ### Example Run with Paired-End Reads:
 ```python
-python3 runPIE.py -f /inputFiles/phage_reference_file.fasta -p /inputFiles/R1.fastq /inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
+python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -p /inputFiles/R1.fastq /inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
 ### Example Run with Single Read:
 ```python
-python3 runPIE.py -f /inputFiles/phage_reference_file.fasta -i /inputFiles/single_read_file.fastq -s sample_name -o pieOutputFolderName/sample_output
+python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -i /inputFiles/single_read_file.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
 
 ## Test Data and Example Output
@@ -55,7 +55,7 @@ Paired-end reads of a small bacterial community is used for the test data.
 The phage reference file is already included in the testFiles folder and contains 10 sample phage sequences.
 ### Example Run of Test Data:
 ```python
-python3 runPIE.py -f /testFiles/test_phage_reference.fasta -p /testFiles/test_data_R1.fastq /testFiles/test_data_R2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
+python3.9 runPIE.py -f /testFiles/test_phage_reference.fasta -p /testFiles/test_data_R1.fastq /testFiles/test_data_R2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
 ```
 
 ## Further Details:
