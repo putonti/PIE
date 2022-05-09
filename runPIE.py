@@ -38,7 +38,7 @@ def process_raw_reads(*fastqs, num_threads=4):
                      fastqs[0].strip(".fastq")+"_trimmed.fastq"+" qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 stats="\
                      +fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+\
                      "_read_qualTrimming.stats statscolumns=5 trimq=20"
-        spades_assembly = "python3 /spades/SPAdes-3.15.3-Linux/bin/metaspades.py --only-assembler -t "+str(num_threads)+\
+        spades_assembly = "python3.9 /spades/SPAdes-3.15.3-Linux/bin/metaspades.py --only-assembler -t "+str(num_threads)+\
             " -12 "+fastqs[0].strip(".fastq")+"_trimmed.fastq"+" -o "+\
             fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
         os.system(bbduk_trim)
@@ -50,7 +50,7 @@ def process_raw_reads(*fastqs, num_threads=4):
                      fastqs[1].strip(".fastq")+"_trimmed.fastq qtrim=rl ftl=15 ftr=135 maq=20 maxns=0 " \
                      "stats="+fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+\
                      "_read_qualTrimming.stats statscolumns=5 trimq=20"
-        spades_assembly = "python3 /spades/SPAdes-3.15.3-Linux/bin/metaspades.py --only-assembler -t "+\
+        spades_assembly = "python3.9 /spades/SPAdes-3.15.3-Linux/bin/metaspades.py --only-assembler -t "+\
             str(num_threads)+" -1 "+fastqs[0].strip(".fastq")+"_trimmed.fastq"+" -2 "+\
             fastqs[1].strip(".fastq")+"_trimmed.fastq"+" -o "+\
             fastqs[0].strip(".fastq").replace("_R1", "").replace("_R2", "")+"_assembly"
