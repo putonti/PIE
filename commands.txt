@@ -30,4 +30,4 @@ PIE Commands
 	-p : Paired-end read files. List both read files with a space between
 
    example:
-	python3 runPIE.py -f inputFiles/phage_reference_file.fasta -p inputFiles/R1.fastq inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
+	python3 runPIE.py -f /inputFiles/phage_reference_file.fasta -p /inputFiles/R1.fastq /inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
