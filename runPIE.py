@@ -300,7 +300,7 @@ else:
 
     # check that there are bacterial contigs
     x=list(SeqIO.parse(b_sequence_file,'fasta'))
-    if len(x)==0:
+    if len(x)<5:
         phage_out = open(args.output_path+"/"+args.sample_name+"_phages_exceeding_threshold.csv","w")
         phage_out.write("rebel_names,rebel_coverages"+"\n")
         # there are no bacterial contigs, just phage
