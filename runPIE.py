@@ -15,6 +15,7 @@ parser.add_argument('-s', '--sample_name', action="store", metavar='<str>', help
 parser.add_argument('-t', '--num_threads', action="store", metavar='<int>', type=int, default = 4, help='Number of processors to use (default=4)')
 parser.add_argument('-n', '--threshold', action="store", metavar='<int>', default="0.99", help='Threshold for phage coverages (default=0.99)')
 parser.add_argument('-f', '--phage_reference_file', action="store", metavar='<filename>', help='Reference file of phage sequences (required)')
+parser.add_argument('-a', '--assembled_contigs', action="store", metavar='<filename>', help='Assembled contigs file')
 group=parser.add_mutually_exclusive_group()
 group.add_argument('-i', '--single_read', action="store", metavar='<filename>', help='Single read file')
 group.add_argument('-p', '--paired_end_reads', action="store", nargs=2, metavar=('<filename>', '<filename>'), help='Paired-end read files. List both read files with a space between')
@@ -260,22 +261,23 @@ def write_out(out_path, samp_name, bact_name, bact_cov, phage_name, phage_cov):
 
 
 # calls
-if args.num_threads is None:
-    if args.paired_end_reads is not None:
-        assembly = process_raw_reads(args.paired_end_reads[0], args.paired_end_reads[1])
-    elif args.single_read is not None:
-        assembly = process_raw_reads(args.single_read)
+if args.assembled_contigs is None:
+    if args.num_threads is None:
+        if args.paired_end_reads is not None:
+            assembly = process_raw_reads(args.paired_end_reads[0], args.paired_end_reads[1])
+        elif args.single_read is not None:
+            assembly = process_raw_reads(args.single_read)
+        else:
+            parser.error('Reads must be provided for analysis.')
     else:
-        parser.error('Reads must be provided for analysis.')
+        if args.paired_end_reads is not None:
+            assembly = process_raw_reads(args.paired_end_reads[0], args.paired_end_reads[1], num_threads=args.num_threads)
+        elif args.single_read is not None:
+            assembly = process_raw_reads(args.single_read, num_threads=args.num_threads)
+        else:
+            parser.error('Reads must be provided for analysis.')
 else:
-    if args.paired_end_reads is not None:
-        assembly = process_raw_reads(args.paired_end_reads[0], args.paired_end_reads[1], num_threads=args.num_threads)
-    elif args.single_read is not None:
-        assembly = process_raw_reads(args.single_read, num_threads=args.num_threads)
-    else:
-        parser.error('Reads must be provided for analysis.')
-
-
+    assembly = args.assembled_contigs
   
 
 # threshold for trimming reads is based upon the smallest phage sequence
@@ -285,7 +287,10 @@ for i in ps:
     if len(str(i.seq))<trim_threshold:
         trim_threshold=len(str(i.seq))
 trim_threshold=trim_threshold-(trim_threshold // 10 + 300)
-assembly,failed_t = trim_assembly(assembly + '/contigs.fasta', trim_threshold)
+if args.assembled_contigs is None:
+    assembly,failed_t = trim_assembly(assembly + '/contigs.fasta', trim_threshold)
+else:
+    assembly,failed_t = trim_assembly(assembly, trim_threshold)
 if failed_t is True:
     print('No contigs passed the filter. No phages are found.')
 else:
