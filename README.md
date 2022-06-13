@@ -40,7 +40,6 @@ Single or Paired-End Read Inputs:
 * -i : Single read file
 * -p : Paired-end read files. List both read files with a space between
 
-
 ### Example Run with Paired-End Reads:
 ```python
 python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -p /inputFiles/R1.fastq /inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
@@ -48,6 +47,14 @@ python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -p /inputFiles/R1.
 ### Example Run with Single Read:
 ```python
 python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -i /inputFiles/single_read_file.fastq -s sample_name -o pieOutputFolderName/sample_output
+```
+
+If you would prefer to run your own assembly outside of PIE and skip the assembly step, input assembled contig files along with single or paired-end read files:
+* -a : Assembled contigs file
+
+### Example Run with Assembled Contigs:
+```python
+python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -a /inputFiles/contigs.fasta -p /inputFiles/R1.fastq /inputFiles/R2.fastq -s sample_name -o pieOutputFolderName/sample_output
 ```
 
 ## Test Data and Example Output
