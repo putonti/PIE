@@ -59,7 +59,7 @@ python3.9 runPIE.py -f /inputFiles/phage_reference_file.fasta -a /inputFiles/con
 
 ## Test Data and Example Output
 Paired-end reads of a small bacterial community is used for the test data.
-The phage reference file is already included in the testFiles folder and contains 10 sample phage sequences.
+The phage reference file is already included in the testFiles folder and contains 10 sample phage sequences ("test_phage_reference.fasta"). We have also included a larger phage dataset, which includes 34, of which the 10 are a subset ("34_phage.fasta").
 ### Example Run of Test Data:
 ```python
 python3.9 runPIE.py -f /testFiles/test_phage_reference.fasta -p /testFiles/test_data_R1.fastq /testFiles/test_data_R2.fastq -s test_sample -o pieOutputFolderName/test_sample_output
